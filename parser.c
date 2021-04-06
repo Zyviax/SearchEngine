@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+/**
+ * Parses relevant data from a given xml file (wsj)
+ */
 void parser() {
     FILE *input = fopen("wsj.small.xml", "r");
     FILE *output = fopen("postparse.txt", "w");
@@ -71,7 +74,7 @@ void cleanInput() {
     char currChar = ' ';
     int unprinted = 0;
     while ((currChar = fgetc(input)) != EOF) {
-        if (currChar == '(' || currChar == ')') {
+        if (currChar == '(' || currChar == ')' || currChar == '"' || currChar == '\'') {
             continue;
         } else if (currChar == ' ' || currChar == ',' || currChar == '.') {
             unprinted = 1;
@@ -95,12 +98,40 @@ void cleanInput() {
     fclose(output);
 }
 
+/**
+ * Creates an inverted file
+ */
 void indexer() {
+    FILE *input = fopen("test.txt", "r");
+    FILE *output = fopen("invertedfile.txt", "w");
+    char curr = ' ';
+    const int defaultSize = 1;
 
+    while ((curr = fgetc(input)) != EOF) {
+        if (curr != ' ') {
+            char *word = malloc(defaultSize * sizeof(char));
+            int currSize = defaultSize;
+            int wordIndex = 0;
+            for (; curr != ' ' && curr != EOF; wordIndex++, curr = fgetc(input)) {
+                word[wordIndex] = curr;
+                if (currSize-1 == wordIndex) {
+                    word = realloc(word, currSize * sizeof(char) + 1);
+                    currSize = currSize + 1;
+                }
+            }
+            //fprintf(output, "%s\n", word);
+            printf("%s", word);
+            free(word);
+        }
+        printf(" ");
+    }
+
+    fclose(input);
+    fclose(output);
 }
 
 int main() {
-    parser();
-    cleanInput();
-    //indexer();
+    //parser();
+    //cleanInput();
+    indexer();
 }
