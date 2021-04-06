@@ -102,12 +102,16 @@ void cleanInput() {
  * Creates an inverted file
  */
 void indexer() {
-    FILE *input = fopen("test.txt", "r");
+    FILE *input = fopen("postclean.txt", "r");
     FILE *output = fopen("invertedfile.txt", "w");
     char curr = ' ';
-    const int defaultSize = 1;
+    const int defaultSize = 5;
 
     while ((curr = fgetc(input)) != EOF) {
+        if (curr == '\n') {
+            fprintf(output, "\n");
+            printf("testtstst");
+        }
         if (curr != ' ') {
             char *word = malloc(defaultSize * sizeof(char));
             int currSize = defaultSize;
@@ -115,15 +119,14 @@ void indexer() {
             for (; curr != ' ' && curr != EOF; wordIndex++, curr = fgetc(input)) {
                 word[wordIndex] = curr;
                 if (currSize-1 == wordIndex) {
-                    word = realloc(word, currSize * sizeof(char) + 1);
-                    currSize = currSize + 1;
+                    word = realloc(word, currSize * sizeof(char) * 2);
+                    currSize = currSize * 2;
                 }
             }
-            //fprintf(output, "%s\n", word);
-            printf("%s", word);
+            word[wordIndex] = '\0';
+            fprintf(output, "%s\n", word);
             free(word);
         }
-        printf(" ");
     }
 
     fclose(input);
