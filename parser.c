@@ -98,39 +98,64 @@ void cleanInput() {
     fclose(output);
 }
 
+char *getNextWord(FILE *input, char curr) {
+    const int defaultSize = 5;
+    char *word = malloc(defaultSize * sizeof(char));
+    int currSize = defaultSize;
+    int wordIndex = 0;
+    for (; curr != ' ' && curr != EOF; wordIndex++, curr = fgetc(input)) {
+        word[wordIndex] = curr;
+        if (currSize-1 == wordIndex) {
+            word = realloc(word, currSize * sizeof(char) * 2);
+            currSize = currSize * 2;
+        }
+    }
+    word[wordIndex] = '\0';
+    return word;
+}
+
 /**
  * Creates an inverted file
  */
 void indexer() {
     FILE *input = fopen("postclean.txt", "r");
     FILE *output = fopen("invertedfile.txt", "w");
+    FILE *idMap = fopen("map.txt", "w");
     char curr = ' ';
-    const int defaultSize = 5;
+    
+    int currId = -1;
 
     while ((curr = fgetc(input)) != EOF) {
-        if (curr == '\n') {
+        if (currId == -1) {
+            currId = 0;
+            curr = fgetc(input);
+            curr = fgetc(input);
+            char *docNo = getNextWord(input, curr);
+            fprintf(idMap, "%d %s\n", currId, docNo);
+            free(docNo);
+        } else if (curr == '\n') {
             fprintf(output, "\n");
-            printf("testtstst");
-        }
-        if (curr != ' ') {
-            char *word = malloc(defaultSize * sizeof(char));
-            int currSize = defaultSize;
-            int wordIndex = 0;
-            for (; curr != ' ' && curr != EOF; wordIndex++, curr = fgetc(input)) {
-                word[wordIndex] = curr;
-                if (currSize-1 == wordIndex) {
-                    word = realloc(word, currSize * sizeof(char) * 2);
-                    currSize = currSize * 2;
-                }
+            while (curr == '\n') {
+                curr = fgetc(input);
             }
-            word[wordIndex] = '\0';
-            fprintf(output, "%s\n", word);
+            if (isdigit(curr)) {
+                currId = curr - '0';
+                curr = fgetc(input);
+                curr = fgetc(input);
+                char *docNo = getNextWord(input, curr);
+                fprintf(idMap, "%d %s\n", currId, docNo);
+                free(docNo);
+            }
+        } else if (curr != ' ') {
+            char *word = getNextWord(input, curr);
+            fprintf(output, "%d %s\n", currId, word);
             free(word);
         }
     }
 
     fclose(input);
     fclose(output);
+    fclose(idMap);
 }
 
 int main() {
