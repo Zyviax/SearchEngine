@@ -6,7 +6,7 @@
  * Parses relevant data from a given xml file (wsj)
  */
 void parser() {
-    FILE *input = fopen("wsj.small.xml", "r");
+    FILE *input = fopen("wsj.xml", "r");
     FILE *output = fopen("postparse.txt", "w");
     int docCount = 0;
     char docNoTag[] = "<DOCNO>";
@@ -26,8 +26,11 @@ void parser() {
                 tagIndex++;
             }
             if (validDocTag == 1) {
-                fprintf(output, "%d", docCount++);
+                fprintf(output, "%d ", docCount++);
                 while ((character = fgetc(input)) != '<') {
+                    if (character == '\n') {
+                        continue;
+                    }
                     fprintf(output, "%c", character);
                 }
                 while (startTagCount < (sizeof(startTags)/sizeof(startTags[0]))) {
@@ -74,17 +77,15 @@ void cleanInput() {
     char currChar = ' ';
     int unprinted = 0;
     while ((currChar = fgetc(input)) != EOF) {
-        if (currChar == '(' || currChar == ')' || currChar == '"' || currChar == '\'') {
+        if (currChar == '(' || currChar == ')' || currChar == '"' || currChar == '\'' || currChar == '?' || currChar == ':' || currChar == ';' || currChar == '!' || currChar == '$' || currChar == '#') {
             continue;
+        } else if (currChar == '-' || currChar == '/') {
+            fprintf(output, " ");
         } else if (currChar == ' ' || currChar == ',' || currChar == '.') {
+            if (currChar != ' ' && prevChar == ' ') {
+                fprintf(output, "%c", prevChar);
+            }
             unprinted = 1;
-        } else if (currChar == ' ') {
-            if (prevChar == ' ') {
-                continue;
-            } else if (unprinted == 0) {
-                fprintf(output, "%c", currChar);
-                unprinted = 0;               
-            } 
         } else {
             if (unprinted == 1) {
                 fprintf(output, "%c", prevChar);
@@ -98,68 +99,7 @@ void cleanInput() {
     fclose(output);
 }
 
-char *getNextWord(FILE *input, char curr) {
-    const int defaultSize = 5;
-    char *word = malloc(defaultSize * sizeof(char));
-    int currSize = defaultSize;
-    int wordIndex = 0;
-    for (; curr != ' ' && curr != EOF; wordIndex++, curr = fgetc(input)) {
-        word[wordIndex] = curr;
-        if (currSize-1 == wordIndex) {
-            word = realloc(word, currSize * sizeof(char) * 2);
-            currSize = currSize * 2;
-        }
-    }
-    word[wordIndex] = '\0';
-    return word;
-}
-
-/**
- * Creates an inverted file
- */
-void indexer() {
-    FILE *input = fopen("postclean.txt", "r");
-    FILE *output = fopen("invertedfile.txt", "w");
-    FILE *idMap = fopen("map.txt", "w");
-    char curr = ' ';
-    
-    int currId = -1;
-
-    while ((curr = fgetc(input)) != EOF) {
-        if (currId == -1) {
-            currId = 0;
-            curr = fgetc(input);
-            curr = fgetc(input);
-            char *docNo = getNextWord(input, curr);
-            fprintf(idMap, "%d %s\n", currId, docNo);
-            free(docNo);
-        } else if (curr == '\n') {
-            fprintf(output, "\n");
-            while (curr == '\n') {
-                curr = fgetc(input);
-            }
-            if (isdigit(curr)) {
-                currId = curr - '0';
-                curr = fgetc(input);
-                curr = fgetc(input);
-                char *docNo = getNextWord(input, curr);
-                fprintf(idMap, "%d %s\n", currId, docNo);
-                free(docNo);
-            }
-        } else if (curr != ' ') {
-            char *word = getNextWord(input, curr);
-            fprintf(output, "%d %s\n", currId, word);
-            free(word);
-        }
-    }
-
-    fclose(input);
-    fclose(output);
-    fclose(idMap);
-}
-
 int main() {
-    //parser();
-    //cleanInput();
-    indexer();
+    parser();
+    cleanInput();
 }
