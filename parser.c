@@ -72,30 +72,69 @@ void parser() {
  */
 void cleanInput() {
     FILE *input = fopen("postparse.txt", "r");
+    FILE *midput = fopen("midclean.txt", "w");
     FILE *output = fopen("postclean.txt", "w");
     char prevChar = ' ';
     char currChar = ' ';
     int unprinted = 0;
+    int spaces = 0;
     while ((currChar = fgetc(input)) != EOF) {
-        if (currChar == '(' || currChar == ')' || currChar == '"' || currChar == '\'' || currChar == '?' || currChar == ':' || currChar == ';' || currChar == '!' || currChar == '$' || currChar == '#') {
-            continue;
-        } else if (currChar == '-' || currChar == '/') {
-            fprintf(output, " ");
-        } else if (currChar == ' ' || currChar == ',' || currChar == '.') {
-            if (currChar != ' ' && prevChar == ' ') {
-                fprintf(output, "%c", prevChar);
+        if (currChar == '\n') {
+            spaces = 0;
+        } 
+        if (spaces < 2) {
+            if (currChar == ' ') {
+                if (prevChar == ' ') {
+                    continue;
+                }
+                spaces++;
             }
-            unprinted = 1;
-        } else {
-            if (unprinted == 1) {
-                fprintf(output, "%c", prevChar);
+            fprintf(midput, "%c", currChar);
+        } else if (currChar == '(' || currChar == ')' || currChar == '\"' || currChar == '?' || currChar == ':' || currChar == ';' || 
+            currChar == '!' || currChar == '$' || currChar == '#' || currChar == '-' || currChar == '/' || currChar == '*' || 
+            currChar == '%' || currChar == '&' || currChar == '`') {
+            fprintf(midput, " ");
+        } else if (currChar == ' ') {
+            if (prevChar == ',' || prevChar == '.') {
                 unprinted = 0;
             }
-            fprintf(output, "%c", currChar);
+            fprintf(midput, " ");
+        } else if (currChar == ',' || currChar == '.') {
+            if (prevChar == ',' || prevChar == '.') {
+                fprintf(midput, " ");
+                unprinted = 0;
+            } else {
+                unprinted = 1;
+            }
+        } else if (currChar == '\'') {
+            continue;
+        } else {
+            if (unprinted == 1) {
+                fprintf(midput, "%c", prevChar);
+                unprinted = 0;
+            }
+            fprintf(midput, "%c", currChar);
         }
         prevChar = currChar;
     }
     fclose(input);
+    fclose(midput);
+
+    midput = fopen("midclean.txt", "r");
+    prevChar = '\0';
+    currChar = '\0';
+    while ((currChar = fgetc(midput)) != EOF) {
+        if (currChar == ' ') {
+            ;
+        } else if (prevChar == ' ') {
+            fprintf(output, " %c", currChar);
+        } else {
+            fprintf(output, "%c", currChar);
+        }
+        prevChar = currChar;
+    }
+
+    fclose(midput);
     fclose(output);
 }
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <time.h>
 
 char *getNextWord(FILE *input, char curr) {
     const int defaultSize = 5;
@@ -19,12 +20,25 @@ char *getNextWord(FILE *input, char curr) {
     return word;
 }
 
-int compareStrings(void *str1, void *str2) {
-
+/**
+ * some sort for now
+ */
+char **stringSort(char **wordList, int wordCount) {
+    char *temp;
+    for (int i = 0; i < wordCount; i++) {
+        for (int j = 0; j+1 < wordCount; j++) {
+            if (strcmp(wordList[j], wordList[j+1]) > 0) {
+                temp = wordList[j];
+                wordList[j] = wordList[j+1];
+                wordList[j+1] = temp;
+            }
+        }
+    }
+    return wordList;
 }
 
 /**
- * Partially creates an inverted file
+ * Creates a dictionary.
  */
 void createDict() {
     FILE *input = fopen("postclean.txt", "r");
@@ -34,10 +48,20 @@ void createDict() {
     char **wordList = malloc(sizeof(char*) * defaultSize);
     int currSize = defaultSize;
     int wordCount = 0;
+    int allWordsCount = 0;
     char curr = ' ';
     int currId = -1;
 
+    clock_t start = clock();
+
     while ((curr = fgetc(input)) != EOF) {
+        if (wordCount % 1000 == 0) {
+            int msec = (clock() - start) * 1000 / CLOCKS_PER_SEC;
+            printf("wordCount: %d, allWordsCount: %d, timeTaken: %d:%d:%d\n", wordCount, allWordsCount, msec/1000/60, (msec/1000)%60, msec%1000);
+        }
+        // if (wordCount == 100000) {
+        //     break;
+        // }
         if (currId == -1) {
             currId = 0;
             curr = fgetc(input);
@@ -46,13 +70,14 @@ void createDict() {
             fprintf(idMap, "%d %s\n", currId, docNo);
             free(docNo);
         } else if (curr == '\n') {
-            //fprintf(output, "\n");
             while (curr == '\n') {
                 curr = fgetc(input);
             }
             if (isdigit(curr)) {
                 currId = curr - '0';
-                curr = fgetc(input);
+                while ((curr = fgetc(input)) != ' ') {
+                    currId = (currId * 10) + (curr - '0');
+                }
                 curr = fgetc(input);
                 char *docNo = getNextWord(input, curr);
                 fprintf(idMap, "%d %s\n", currId, docNo);
@@ -61,7 +86,7 @@ void createDict() {
         } else if (curr != ' ') {
             char *word = getNextWord(input, curr);
             if (wordCount == 0) {
-                wordList[0] = malloc(sizeof(word)+1);
+                wordList[0] = malloc(strlen(word) * sizeof(char) + 1);
                 strcpy(wordList[0], word);
                 wordCount++;
             } else {
@@ -73,7 +98,7 @@ void createDict() {
                     }
                 }
                 if (uniqueWord == 0) {
-                    wordList[wordCount] = malloc(sizeof(word)+1);
+                    wordList[wordCount] = malloc(strlen(word) * sizeof(char) + 1);
                     strcpy(wordList[wordCount], word);
                     wordCount++;
                 }
@@ -82,21 +107,30 @@ void createDict() {
                 wordList = realloc(wordList, currSize * sizeof(char*) * 2);
                 currSize = currSize * 2;
             }
-            //fprintf(output, "%s %d\n", word, currId);
             free(word);
+            allWordsCount++;
         }
     }
 
-    //qsort(wordList, wordCount, 20, strcmp);
+    printf("Dictionary created.\n");
+    wordList = stringSort(wordList, wordCount);
+    printf("Dictionary sorted.\n");
     for (int i = 0; i < wordCount; i++) {
         fprintf(output, "%s\n", wordList[i]);
+    }
+    printf("Dictionary written to disk.\n");
+    for (int i = 0; i < wordCount; i++) {
         free(wordList[i]);
     }
+    printf("Dictionary entries freed.\n");
+
     free(wordList);
+    printf("Dictionary freed.\n");
 
     fclose(input);
     fclose(output);
     fclose(idMap);
+    printf("Files closed.\n");
 }
 
 int main() {
