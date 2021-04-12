@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 /**
  * Parses relevant data from a given xml file (wsj)
@@ -78,7 +79,16 @@ void cleanInput() {
     char currChar = ' ';
     int unprinted = 0;
     int spaces = 0;
+    char illegalChars[] = "`~!@#$%%^&*()-_=+[]{};:\"<>/?";
+    int illegal;
     while ((currChar = fgetc(input)) != EOF) {
+        illegal = 1;
+        for (int i = 0; i < strlen(illegalChars); i++) {
+            if (currChar == illegalChars[i]) {
+                illegal = 0;
+                break;
+            }
+        }
         if (currChar == '\n') {
             spaces = 0;
         } 
@@ -90,10 +100,7 @@ void cleanInput() {
                 spaces++;
             }
             fprintf(midput, "%c", currChar);
-        } else if (currChar == '(' || currChar == ')' || currChar == '\"' || currChar == '?' || currChar == ':' || currChar == ';' || 
-            currChar == '!' || currChar == '$' || currChar == '#' || currChar == '-' || currChar == '/' || currChar == '*' || 
-            currChar == '%' || currChar == '&' || currChar == '`' || currChar == '{', currChar == '}' || currChar == '+' ||
-            currChar == '[' || currChar == ']') {
+        } else if (illegal == 0) {
             fprintf(midput, " ");
             unprinted = 0;
         } else if (currChar == ' ') {
@@ -106,7 +113,7 @@ void cleanInput() {
                 fprintf(midput, " ");
                 unprinted = 0;
             } else if (prevChar == ' ') {
-                fprint(midput, " ");
+                fprintf(midput, " ");
             } else {
                 unprinted = 1;
             }
