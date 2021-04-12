@@ -94,6 +94,7 @@ void cleanInput() {
             currChar == '!' || currChar == '$' || currChar == '#' || currChar == '-' || currChar == '/' || currChar == '*' || 
             currChar == '%' || currChar == '&' || currChar == '`') {
             fprintf(midput, " ");
+            unprinted = 0;
         } else if (currChar == ' ') {
             if (prevChar == ',' || prevChar == '.') {
                 unprinted = 0;
