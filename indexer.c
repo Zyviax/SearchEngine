@@ -26,6 +26,9 @@ char *getNextWord(FILE *input, char curr) {
 char **stringSort(char **wordList, int wordCount) {
     char *temp;
     for (int i = 0; i < wordCount; i++) {
+        if (i % 1000 == 0) {
+            printf("%f%% sorted.\n", (double)i/(double)wordCount * 100);
+        }
         for (int j = 0; j+1 < wordCount; j++) {
             if (strcmp(wordList[j], wordList[j+1]) > 0) {
                 temp = wordList[j];
@@ -42,6 +45,7 @@ char **stringSort(char **wordList, int wordCount) {
  */
 void createDict() {
     FILE *input = fopen("postclean.txt", "r");
+    FILE *preoutput = fopen("wordList_(unsorted).txt", "w");
     FILE *output = fopen("wordlist.txt", "w");
     FILE *idMap = fopen("map.txt", "w");
     const int defaultSize = 5;
@@ -57,7 +61,7 @@ void createDict() {
     while ((curr = fgetc(input)) != EOF) {
         if (wordCount % 1000 == 0) {
             int msec = (clock() - start) * 1000 / CLOCKS_PER_SEC;
-            printf("wordCount: %d, allWordsCount: %d, timeTaken: %d:%d:%d\n", wordCount, allWordsCount, msec/1000/60, (msec/1000)%60, msec%1000);
+            printf("wordCount: %d, allWordsCount: %d, timeTaken: %d:%d:%d, currID: %d\n", wordCount, allWordsCount, msec/1000/60, (msec/1000)%60, msec%1000, currId);
         }
         // if (wordCount == 100000) {
         //     break;
@@ -111,14 +115,26 @@ void createDict() {
             allWordsCount++;
         }
     }
-
+    fclose(input);
+    fclose(idMap);
     printf("Dictionary created.\n");
+
+    for (int i = 0; i < wordCount; i++) {
+        fprintf(preoutput, "%s\n", wordList[i]);
+    }
+    fclose(preoutput);
+    printf("Unsorted dictionary written to disk.\n");
+
     wordList = stringSort(wordList, wordCount);
-    printf("Dictionary sorted.\n");
+    int msec = (clock() - start) * 1000 / CLOCKS_PER_SEC;
+    printf("Dictionary sorted. timeTaken: %d:%d:%d\n", msec/1000/60, (msec/1000)%60, msec%1000);
+
     for (int i = 0; i < wordCount; i++) {
         fprintf(output, "%s\n", wordList[i]);
     }
-    printf("Dictionary written to disk.\n");
+    fclose(output);
+    printf("Sorted dictionary written to disk.\n");
+
     for (int i = 0; i < wordCount; i++) {
         free(wordList[i]);
     }
@@ -127,10 +143,7 @@ void createDict() {
     free(wordList);
     printf("Dictionary freed.\n");
 
-    fclose(input);
-    fclose(output);
-    fclose(idMap);
-    printf("Files closed.\n");
+    printf("Indexer finished.\n");
 }
 
 int main() {
