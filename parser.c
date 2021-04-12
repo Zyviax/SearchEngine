@@ -92,7 +92,8 @@ void cleanInput() {
             fprintf(midput, "%c", currChar);
         } else if (currChar == '(' || currChar == ')' || currChar == '\"' || currChar == '?' || currChar == ':' || currChar == ';' || 
             currChar == '!' || currChar == '$' || currChar == '#' || currChar == '-' || currChar == '/' || currChar == '*' || 
-            currChar == '%' || currChar == '&' || currChar == '`') {
+            currChar == '%' || currChar == '&' || currChar == '`' || currChar == '{', currChar == '}' || currChar == '+' ||
+            currChar == '[' || currChar == ']') {
             fprintf(midput, " ");
             unprinted = 0;
         } else if (currChar == ' ') {
@@ -104,6 +105,8 @@ void cleanInput() {
             if (prevChar == ',' || prevChar == '.') {
                 fprintf(midput, " ");
                 unprinted = 0;
+            } else if (prevChar == ' ') {
+                fprint(midput, " ");
             } else {
                 unprinted = 1;
             }
