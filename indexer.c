@@ -43,7 +43,7 @@ char **stringSort(char **wordList, int wordCount) {
 /**
  * Creates a dictionary.
  */
-void createDict() {
+int createDict() {
     FILE *input = fopen("postclean.txt", "r");
     FILE *preoutput = fopen("wordList_(unsorted).txt", "w");
     FILE *output = fopen("wordlist.txt", "w");
@@ -144,8 +144,14 @@ void createDict() {
     printf("Dictionary freed.\n");
 
     printf("Indexer finished.\n");
+    return wordCount;
+}
+
+void createPostings(int wordCount) {
+    int *postingsList[wordCount]; //????
 }
 
 int main() {
-    createDict();
+    int wordCount = createDict();
+    createPostings(wordCount);
 }

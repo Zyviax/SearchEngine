@@ -115,7 +115,18 @@ void cleanInput() {
             } else if (prevChar == ' ') {
                 fprintf(midput, " ");
             } else {
-                unprinted = 1;
+                int prevIllegal = 1;
+                for (int i = 0; i < strlen(illegalChars); i++) {
+                    if (prevChar == illegalChars[i]) {
+                        prevIllegal = 0;
+                        break;
+                    }
+                }
+                if (prevIllegal == 0) {
+                    ;
+                } else {
+                    unprinted = 1;
+                }
             }
         } else if (currChar == '\'') {
             continue;
