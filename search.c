@@ -27,6 +27,11 @@ int main() {
         token = strtok(NULL, " ");
     }
 
+    /* TODO implement hashtable with <k,v> as <word, postings>
+     * https://stackoverflow.com/questions/7666509/hash-function-for-string
+     * http://www.cse.yorku.ca/~oz/hash.html
+     */
+
     printf("You have %d search terms.\n", searchTermsSize);
     printf("The search terms are:\n");
     for (int i = 0; i < searchTermsSize; i++) {
