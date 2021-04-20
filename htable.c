@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "htable.h"
 
 /**
@@ -67,7 +68,7 @@ int htable_put(htable h, char *str, int *list) {
     int step = htable_step(h, hash(str));
 
     if (h->words[key] == NULL) {
-        h->words[key] = emalloc((strlen(str)+1) * sizeof str[0]);
+        h->words[key] = malloc((strlen(str)+1) * sizeof str[0]);
         strcpy(h->words[key], str);
         h->lists[key] = list; // does this work?
         return 1;
@@ -76,7 +77,7 @@ int htable_put(htable h, char *str, int *list) {
         for (int i = 0; i < h->capacity; i++) {
             key_i = (key + i*step)%h->capacity;
             if (h->words[key_i] == NULL) {
-                h->words[key_i] = emalloc((strlen(str)+1) * sizeof str[0]);
+                h->words[key_i] = malloc((strlen(str)+1) * sizeof str[0]);
                 strcpy(h->words[key_i], str);
                 h->lists[key_i] = list; // does this work?
                 return 1;
