@@ -57,3 +57,4 @@ dkms.conf
 *.xml
 *.qrels
 *.txt
+!testwsj.xml

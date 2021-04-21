@@ -7,12 +7,12 @@
  * Parses relevant data from a given xml file (wsj)
  */
 void parser() {
-    FILE *input = fopen("wsj.xml", "r");
+    FILE *input = fopen("testwsj.xml", "r");
     FILE *output = fopen("postparse.txt", "w");
     int docCount = 0;
     char docNoTag[] = "<DOCNO>";
     int startTagCount = 0;
-    char *startTags[] = {"<HL>", "<IN>", "<TEXT>"};
+    char *startTags[] = {"<HL>", "<IN>", "<TEXT>", "<DATELINE>", "<LP>"};
     char character;
     while ((character = fgetc(input)) != EOF) {
         int validDocTag = 1; // if valid then 1 else 0;
@@ -34,6 +34,7 @@ void parser() {
                     }
                     fprintf(output, "%c", character);
                 }
+                // change how startTagCount works since some tags don't appear in every doc, and potentially not in the same order.
                 while (startTagCount < (sizeof(startTags)/sizeof(startTags[0]))) {
                     tagIndex = 1;
                     if (character == '<') {
