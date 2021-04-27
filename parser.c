@@ -7,12 +7,15 @@
  * Parses relevant data from a given xml file (wsj)
  */
 void parser() {
-    FILE *input = fopen("testwsj.xml", "r");
-    FILE *output = fopen("postparse.txt", "w");
+    FILE *input = fopen("files/input/wsj.xml", "r");
+    FILE *output = fopen("files/output/postparse.txt", "w+");
+    if (input == NULL) {
+        fprintf(stderr, "The required file is missing for parsing\n");
+        exit(1);
+    }
     int docCount = 0;
     char docNoTag[] = "<DOCNO>";
-    int startTagCount = 0;
-    char *startTags[] = {"<HL>", "<IN>", "<TEXT>", "<DATELINE>", "<LP>"};
+    // char *startTags[] = {"<HL>", "<IN>", "<TEXT>", "<DATELINE>", "<LP>"};
     char character;
     while ((character = fgetc(input)) != EOF) {
         int validDocTag = 1; // if valid then 1 else 0;
@@ -28,40 +31,47 @@ void parser() {
             }
             if (validDocTag == 1) {
                 fprintf(output, "%d ", docCount++);
+                // prints DOCNO
                 while ((character = fgetc(input)) != '<') {
                     if (character == '\n') {
                         continue;
                     }
                     fprintf(output, "%c", character);
                 }
-                // change how startTagCount works since some tags don't appear in every doc, and potentially not in the same order.
-                while (startTagCount < (sizeof(startTags)/sizeof(startTags[0]))) {
-                    tagIndex = 1;
+                // skips over closing DOCNO tag
+                while ((character = fgetc(input)) != '>') {
+                    character = fgetc(input);
+                }
+                int endDoc = 0;
+                while (1) {
                     if (character == '<') {
-                        int validTag = 1;
-                        // checks if the following text matches "HL>", "IN>" or "TEXT>"
-                        while (startTags[startTagCount][tagIndex] != '\0') {
-                            if ((character = fgetc(input)) != startTags[startTagCount][tagIndex]) {
-                                validTag = 0;
+                        // skips over opening tag
+                        while ((character = fgetc(input)) != '>') {
+                            if (character == '/') {
+                                // has to be </doc>
+                                endDoc = 1;
                                 break;
                             }
-                            tagIndex++;
                         }
-                        if (validTag == 1) {
-                            while ((character = fgetc(input)) != '<') {
-                                if (character != '\n') {
-                                    fprintf(output, "%c", tolower(character));
-                                } else {
-                                    fprintf(output, " ");
-                                }
+                        if (endDoc == 1) {
+                            break;
+                        }
+                        // prints content of tag
+                        while ((character = fgetc(input)) != '<') {
+                            if (character != '\n') {
+                                fprintf(output, "%c", tolower(character));
+                            } else {
+                                fprintf(output, " ");
                             }
-                            startTagCount++;
+                        }
+                        // skips over opening tag
+                        while ((character = fgetc(input)) != '>') {
+                            ;
                         }
                     }
                     character = fgetc(input);
                 }
                 fprintf(output, "\n\n");
-                startTagCount = 0;
             }
         }
     }
@@ -73,9 +83,13 @@ void parser() {
  * Strips unneeded punctuation and spacing
  */
 void cleanInput() {
-    FILE *input = fopen("postparse.txt", "r");
-    FILE *midput = fopen("midclean.txt", "w");
-    FILE *output = fopen("postclean.txt", "w");
+    FILE *input = fopen("files/output/postparse.txt", "r");
+    FILE *midput = fopen("files/output/midclean.txt", "w+");
+    FILE *output = fopen("files/output/postclean.txt", "w+");
+    if (input == NULL) {
+        fprintf(stderr, "The required file is missing for cleaning\n");
+        exit(1);
+    }
     char prevChar = ' ';
     char currChar = ' ';
     int unprinted = 0;
@@ -141,9 +155,8 @@ void cleanInput() {
         prevChar = currChar;
     }
     fclose(input);
-    fclose(midput);
+    rewind(midput);
 
-    midput = fopen("midclean.txt", "r");
     prevChar = '\0';
     currChar = '\0';
     while ((currChar = fgetc(midput)) != EOF) {
@@ -161,7 +174,16 @@ void cleanInput() {
     fclose(output);
 }
 
+void rmFiles() {
+    int r;
+    r = remove("files/output/postparse.txt");
+    r = remove("files/output/midclean.txt");
+}
+
 int main() {
     parser();
     cleanInput();
+    rmFiles();
+
+    return EXIT_SUCCESS;
 }

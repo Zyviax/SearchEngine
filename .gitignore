@@ -58,3 +58,4 @@ dkms.conf
 *.qrels
 *.txt
 !testwsj.xml
+testing-programs/*

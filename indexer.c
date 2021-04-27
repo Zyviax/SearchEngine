@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <time.h>
+#include "htable.h"
 
 char *getNextWord(FILE *input, char curr) {
     const int defaultSize = 5;
@@ -26,9 +26,6 @@ char *getNextWord(FILE *input, char curr) {
 char **stringSort(char **wordList, int wordCount) {
     char *temp;
     for (int i = 0; i < wordCount; i++) {
-        if (i % 1000 == 0) {
-            printf("%f%% sorted.\n", (double)i/(double)wordCount * 100);
-        }
         for (int j = 0; j+1 < wordCount; j++) {
             if (strcmp(wordList[j], wordList[j+1]) > 0) {
                 temp = wordList[j];
@@ -44,114 +41,103 @@ char **stringSort(char **wordList, int wordCount) {
  * Creates a dictionary.
  */
 int createDict() {
-    FILE *input = fopen("postclean.txt", "r");
-    FILE *preoutput = fopen("wordList_(unsorted).txt", "w");
-    FILE *output = fopen("wordlist.txt", "w");
-    FILE *idMap = fopen("map.txt", "w");
-    const int defaultSize = 5;
-    char **wordList = malloc(sizeof(char*) * defaultSize);
-    int currSize = defaultSize;
-    int wordCount = 0;
-    int allWordsCount = 0;
-    char curr = ' ';
-    int currId = -1;
+    FILE *input = fopen("files/output/postclean.txt", "r");
+    FILE *output = fopen("files/output/wordList.txt", "w+");
+    FILE *postings = fopen("files/output/postings.txt", "w+");
+    FILE *ids = fopen("files/output/docIDs.txt", "w+");
+    if (input == NULL) {
+        fprintf(stderr, "The required file is missing for dictionary creation\n");
+        exit(1);
+    }
 
-    clock_t start = clock();
+    int currId;
+    char buffer[1600000];
+    htable wordList = htable_new(1000000);
+    int insertCount = 0;
 
-    while ((curr = fgetc(input)) != EOF) {
-        if (wordCount % 1000 == 0) {
-            int msec = (clock() - start) * 1000 / CLOCKS_PER_SEC;
-            printf("wordCount: %d, allWordsCount: %d, timeTaken: %d:%d:%d, currID: %d\n", wordCount, allWordsCount, msec/1000/60, (msec/1000)%60, msec%1000, currId);
-        }
-        // if (wordCount == 100000) {
-        //     break;
-        // }
-        if (currId == -1) {
-            currId = 0;
-            curr = fgetc(input);
-            curr = fgetc(input);
-            char *docNo = getNextWord(input, curr);
-            fprintf(idMap, "%d %s\n", currId, docNo);
-            free(docNo);
-        } else if (curr == '\n') {
-            while (curr == '\n') {
-                curr = fgetc(input);
-            }
-            if (isdigit(curr)) {
-                currId = curr - '0';
-                while ((curr = fgetc(input)) != ' ') {
-                    currId = (currId * 10) + (curr - '0');
-                }
-                curr = fgetc(input);
-                char *docNo = getNextWord(input, curr);
-                fprintf(idMap, "%d %s\n", currId, docNo);
-                free(docNo);
-            }
-        } else if (curr != ' ') {
-            char *word = getNextWord(input, curr);
-            if (wordCount == 0) {
-                wordList[0] = malloc(strlen(word) * sizeof(char) + 1);
-                strcpy(wordList[0], word);
-                wordCount++;
+    while (fgets(buffer, sizeof buffer, input) != NULL) {
+        int tokenCount = 0;
+        char *token = strtok(buffer, " \n");
+        while (token != NULL) {
+            //printf("crash<3> %s\n", token); //crashes on token = "6.8" for whatever reason
+            // if (strcmp(token, "6.8") == 0) {
+            //     printf("crash<3> %s %d\n", token, tokenCount);
+            // }
+            if (tokenCount == 0) {
+                currId = strtol(token, NULL, 10);
+                tokenCount++;
+            } else if (tokenCount == 1) {
+                fprintf(ids, "%s\n", token);
+                tokenCount++;
             } else {
-                int uniqueWord = 0;
-                for (int i = 0; i < wordCount; i++) {
-                    if (strcmp(wordList[i], word) == 0) {
-                        uniqueWord = 1;
-                        break;
+                // if (strcmp(token, "6.8") == 0) {
+                //     printf("crash<3.1> %s\n", token);
+                // }
+                int *temp = htable_get(wordList, token);
+                if (temp == NULL) {
+                    temp = malloc(sizeof(int));
+                    temp[0] = currId;
+                    // if (strcmp(token, "6.8") == 0) {
+                    //     printf("crash<4> %s\n", token);
+                    // }
+                    if (3 > htable_put(wordList, token, temp, 1)) {
+                        insertCount++;
+                    }
+                    // if (strcmp(token, "6.8") == 0) {
+                    //     printf("crash<5> %s\n", token);
+                    // }
+                } else {
+                    int size = htable_getSize(wordList, token);
+                    if (temp[size-1] != currId) {
+                        //printf("tf: %d %d\n", temp[size-1], currId);
+                        temp = realloc(temp, sizeof(int) * (size + 1));
+                        temp[size] = currId;
+                        // if (strcmp(token, "6.8") == 0) {
+                        //     printf("crash<3.5> %s\n", token);
+                        // }
+                        htable_update(wordList, token, temp, size+1);
+
+                        // int *newTemp = htable_get(wordList, token);
+                        // printf("%s ", token);
+                        // for (int s = 0; s < htable_getSize(wordList, token); s++) {
+                        //     printf("%d ", newTemp[s]);
+                        // }
+                        // printf("\n");
+                        //printf("crash<1>\n");
                     }
                 }
-                if (uniqueWord == 0) {
-                    wordList[wordCount] = malloc(strlen(word) * sizeof(char) + 1);
-                    strcpy(wordList[wordCount], word);
-                    wordCount++;
-                }
             }
-            if (wordCount == currSize) {
-                wordList = realloc(wordList, currSize * sizeof(char*) * 2);
-                currSize = currSize * 2;
-            }
-            free(word);
-            allWordsCount++;
+            // if (strcmp(token, "6.8") == 0) {
+            //     printf("crash<7!> %s\n", token);
+            // }
+            token = strtok(NULL, " \n");
         }
+        printf("%d %d\n", currId, insertCount);
     }
+
     fclose(input);
-    fclose(idMap);
+    fclose(ids);
     printf("Dictionary created.\n");
 
-    for (int i = 0; i < wordCount; i++) {
-        fprintf(preoutput, "%s\n", wordList[i]);
-    }
-    fclose(preoutput);
-    printf("Unsorted dictionary written to disk.\n");
-
-    wordList = stringSort(wordList, wordCount);
-    int msec = (clock() - start) * 1000 / CLOCKS_PER_SEC;
-    printf("Dictionary sorted. timeTaken: %d:%d:%d\n", msec/1000/60, (msec/1000)%60, msec%1000);
-
-    for (int i = 0; i < wordCount; i++) {
-        fprintf(output, "%s\n", wordList[i]);
-    }
+    htable_print_keys(wordList, output);
     fclose(output);
-    printf("Sorted dictionary written to disk.\n");
+    printf("wordList written to disk.\n");
 
-    for (int i = 0; i < wordCount; i++) {
-        free(wordList[i]);
-    }
-    printf("Dictionary entries freed.\n");
+    htable_print_vals(wordList, postings);
+    fclose(postings);
+    printf("postings written to disk.\n");
 
-    free(wordList);
-    printf("Dictionary freed.\n");
+    htable_free(wordList);
 
     printf("Indexer finished.\n");
-    return wordCount;
+    return 0;
 }
 
-void createPostings(int wordCount) {
-    int *postingsList[wordCount]; //????
-}
+// void createPostings(int wordCount) {
+//     int *postingsList[wordCount]; //????
+// }
 
 int main() {
     int wordCount = createDict();
-    createPostings(wordCount);
+    //createPostings(wordCount);
 }
