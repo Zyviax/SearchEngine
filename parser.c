@@ -79,6 +79,34 @@ void parser() {
     fclose(output);
 }
 
+void parserRewrite() {
+    FILE *input = fopen("files/input/wsj.xml", "r");
+    FILE *output = fopen("files/output/postparseRewrite.txt", "w+");
+    if (input == NULL) {
+        fprintf(stderr, "The required file is missing for parsing\n");
+        exit(1);
+    }
+
+    int docCount = 0;
+    char buffer[1000];
+
+    while (fgets(buffer, sizeof buffer, input) != NULL) {
+        char *token = strtok(buffer, " >\n");
+        while (token != NULL) {
+            if (token[0] != '<') {
+                fprintf(output, "%s ", token);
+            } else if (strcmp(token, "<DOCNO") == 0) {
+                fprintf(output, "%d %s ", docCount++, (token = strtok(NULL, " \n")));
+            } else if (strcmp(token, "<DOC") == 0) {
+                fprintf(output, "\n");
+            }
+        }
+    }
+
+    fclose(input);
+    fclose(output);
+}
+
 /**
  * Strips unneeded punctuation and spacing
  */
@@ -181,9 +209,9 @@ void rmFiles() {
 }
 
 int main() {
-    parser();
-    cleanInput();
-    rmFiles();
+    parserRewrite();
+    //cleanInput();
+    //rmFiles();
 
     return EXIT_SUCCESS;
 }
