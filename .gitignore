@@ -57,5 +57,5 @@ dkms.conf
 *.xml
 *.qrels
 *.txt
-!testwsj.xml
-testing-programs/*
+testing-programs
+files
