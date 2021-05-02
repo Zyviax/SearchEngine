@@ -7,8 +7,13 @@ and comprises of:
 - wordList.txt
 
 To compile:
-- ```Parser: gcc parser.c -o parser```
-- ```Indexer: gcc indexer.c htable.c -o indexer```
-- ```Searcher: gcc search.c htable.c -o search```
+- Parser: ```gcc parser.c -o parser```
+- Indexer: ```gcc indexer.c htable.c -o indexer```
+- Searcher: ```gcc search.c htable.c -o search```
+
+To run:
+- Parser: ```parser```
+- Indexer: ```indexer```
+- Searcher: ```search```
 
 wsj.xml and indexes must be located in the same directory as parser/indexer/search engine.
