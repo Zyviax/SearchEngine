@@ -111,10 +111,10 @@ void cleanInput() {
             continue;
         } else {
             if (unprinted == 1) {
-                fprintf(midput, "%c", prevChar);
+                fprintf(midput, "%c", tolower(prevChar));
                 unprinted = 0;
             }
-            fprintf(midput, "%c", currChar);
+            fprintf(midput, "%c", tolower(currChar));
         }
         prevChar = currChar;
     }
