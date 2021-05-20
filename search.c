@@ -27,7 +27,7 @@ htable loadTable(FILE *dict, FILE *postings) {
     int *pointer;
     int wordID = 0;
     while (fgets(word, sizeof word, dict) != NULL) {
-        word[strcspn(word, "\n")] = 0;
+        word[strcspn(word, "\r\n")] = 0;
         pointer = malloc(sizeof(int));
         pointer[0] = wordID;
         htable_put(wordList, word, pointer, 1);
@@ -43,7 +43,7 @@ void **loadIDs(char **docIds, FILE *idFile) {
     char *line = malloc(sizeof(char) * 50);
     int docCount = 0;
     while (fgets(line, 50, idFile) != NULL) {
-        line[strcspn(line, "\n")] = 0;
+        line[strcspn(line, "\r\n")] = 0;
         docIds[docCount] = malloc(sizeof(char) * (strlen(line)+1));
         strcpy(docIds[docCount], line);
         docCount++;
@@ -58,7 +58,7 @@ void **loadPostings(char **postingsArr, FILE *postings) {
     char *line = malloc(sizeof(char) * 10000000);
     int wordCount = 0;
     while (fgets(line, 10000000, postings) != NULL) {
-        line[strcspn(line, "\n")] = 0;
+        line[strcspn(line, "\r\n")] = 0;
         postingsArr[wordCount] = malloc(sizeof(char) * (strlen(line)+1));
         strcpy(postingsArr[wordCount], line);
         wordCount++;
@@ -121,7 +121,7 @@ int main() {
                 searchTerms = realloc(searchTerms, sizeof(char*) * searchTermsSize * 2);
                 searchTermsSize = searchTermsSize * 2;
             }
-            token[strcspn(token, "\n")] = 0; //removes trailing \n
+            token[strcspn(token, "\r\n")] = 0; //removes trailing \n
             searchTerms[searchTermsIndex] = malloc(sizeof(char) * (strlen(token) + 1));
             strcpy(searchTerms[searchTermsIndex], token);
             searchTermsIndex++;
